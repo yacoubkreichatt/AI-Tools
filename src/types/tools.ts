@@ -4,7 +4,8 @@ export type CategoryId =
   | 'business'
   | 'ai-images'
   | 'career'
-  | 'seo';
+  | 'seo'
+  | 'youtube';
 
 export interface Category {
   id: CategoryId;

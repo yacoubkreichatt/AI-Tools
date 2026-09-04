@@ -35,7 +35,8 @@ const AppContent: React.FC = () => {
 
   // 1. Tool Page: /tools/:slug
   if (currentPath.startsWith('/tools/')) {
-    const slug = currentPath.replace('/tools/', '').split('/')[0];
+    const rawSlug = currentPath.replace('/tools/', '').split('/')[0];
+    const slug = rawSlug === 'ai-image-generator' ? 'image-prompt-generator' : rawSlug;
     const tool = TOOLS.find((t) => t.slug === slug);
 
     if (tool) {

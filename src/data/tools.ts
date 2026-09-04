@@ -303,6 +303,7 @@ export const TOOLS: ToolDefinition[] = [
     seoTitle: 'Free AI YouTube Title Generator — High-CTR Video Ideas',
     seoDescription: 'Generate 20 high-click-through-rate YouTube video titles based on proven viral formulas. Free AI tool with one-click copy and export.',
     relatedToolSlugs: [
+      'youtube-thumbnail-downloader',
       'tiktok-hook-generator',
       'reel-ideas-generator',
       'ad-copy-generator',
@@ -450,14 +451,14 @@ export const TOOLS: ToolDefinition[] = [
     ],
   },
 
-  // TOOL 5: AI Image Prompt Generator
+  // TOOL 5: AI Image Generator & Prompt Creator
   {
     id: 'image-prompt-generator',
     slug: 'image-prompt-generator',
-    name: 'AI Image Prompt Generator',
-    tagline: 'Generate photorealistic prompts for Midjourney, Leonardo, Flux, and SD.',
+    name: 'AI Image Generator',
+    tagline: 'Generate studio-grade AI images or craft optimized prompts for Midjourney & Flux.',
     category: 'ai-images',
-    description: 'Stop guessing complex prompt syntax. Generate studio-grade image generation prompts with optimized lighting, camera parameters, aspect ratios, and model-specific modifiers.',
+    description: 'Generate real AI images directly in your browser or craft studio-grade prompts tailored for Midjourney, Flux, Leonardo AI, and DALL-E with lighting, camera specs, and aspect ratios.',
     icon: 'Image',
     inputs: [
       {
@@ -545,12 +546,14 @@ export const TOOLS: ToolDefinition[] = [
     ],
     outputType: 'cards',
     defaultEngine: 'local',
-    seoTitle: 'Free AI Image Prompt Generator — Midjourney, Flux & Leonardo Prompts',
-    seoDescription: 'Generate professional Midjourney, Flux, and Leonardo AI image prompts with lighting, lens specs, and aspect ratio flags. 100% free.',
+    seoTitle: 'Free AI Image Generator & Prompt Creator — Generate Studio Images Online',
+    seoDescription: 'Generate photorealistic AI images and tailored prompts for Midjourney, Flux, and Leonardo. Free online AI image creator with multi-style and aspect ratio support.',
     relatedToolSlugs: [
+      'youtube-thumbnail-downloader',
       'youtube-title-generator',
       'reel-ideas-generator',
       'business-name-generator',
+      'ad-copy-generator',
       'tiktok-hook-generator',
     ],
     isPopular: true,
@@ -1140,6 +1143,83 @@ export const TOOLS: ToolDefinition[] = [
         title: 'Marketing Manager at Stripe',
         inputs: { jobTitle: 'Marketing Manager', company: 'Stripe', skills: 'Growth marketing, analytics, B2B campaigns' },
         outputSummary: 'Generates a persuasive 3-paragraph letter connecting fintech enthusiasm with past marketing metrics.',
+      },
+    ],
+  },
+
+  // TOOL 11: YouTube Thumbnail Downloader
+  {
+    id: 'youtube-thumbnail-downloader',
+    slug: 'youtube-thumbnail-downloader',
+    name: 'YouTube Thumbnail Downloader',
+    tagline: 'Download HD (1280x720) and 4K YouTube video and Shorts thumbnails in one click.',
+    category: 'youtube',
+    description: 'Paste any public YouTube video, Shorts, or live stream link to preview and download full-resolution official thumbnail images without watermarks or login.',
+    icon: 'Youtube',
+    inputs: [
+      {
+        name: 'videoUrl',
+        label: 'YouTube Video or Shorts URL',
+        type: 'text',
+        placeholder: 'https://www.youtube.com/watch?v=... or https://youtu.be/...',
+        required: true,
+      },
+    ],
+    outputType: 'cards',
+    defaultEngine: 'local',
+    seoTitle: 'Free YouTube Thumbnail Downloader — Download HD & 4K Thumbnails',
+    seoDescription: 'Download high-resolution YouTube video and Shorts thumbnails in HD and JPG for free. No watermark, no signup, instant preview and download.',
+    relatedToolSlugs: [
+      'youtube-title-generator',
+      'image-prompt-generator',
+      'tiktok-hook-generator',
+      'reel-ideas-generator',
+    ],
+    isPopular: true,
+    isFeatured: true,
+    whoIsItFor: [
+      'YouTubers studying competing thumbnail compositions, palettes, and typography',
+      'Graphic designers and video editors archiving high-res channel graphics',
+      'Bloggers and journalists needing high-quality editorial stills from public videos',
+      'Social media managers repurposing YouTube video content across platforms',
+    ],
+    howItWorks: [
+      'Copy the link of any public YouTube video or Shorts from your browser or app.',
+      'Paste the URL into the input field above and click "Get Thumbnail".',
+      'Preview the highest-quality available resolution and download in HD (1280x720) or standard JPG format.',
+    ],
+    proTips: [
+      'Shorts videos also have high-resolution 1280x720 cover images stored on YouTube\'s CDN.',
+      'Older videos uploaded in 360p or 480p might not have a maxres (1080p/720p) image; our tool automatically falls back to the highest available quality.',
+      'Always respect original creators\' intellectual property when repurposing public assets.',
+    ],
+    faqs: [
+      {
+        question: 'What is a YouTube Thumbnail Downloader?',
+        answer: 'A YouTube Thumbnail Downloader is a free utility that extracts the official preview image associated with any public YouTube video, Shorts, or stream directly from YouTube\'s public content delivery network (CDN).',
+      },
+      {
+        question: 'What YouTube URL formats are supported?',
+        answer: 'You can paste standard desktop URLs (youtube.com/watch?v=ID), mobile short links (youtu.be/ID), Shorts links (youtube.com/shorts/ID), live streams (youtube.com/live/ID), and embedded URLs.',
+      },
+      {
+        question: 'Is downloading YouTube thumbnails legal?',
+        answer: 'Yes, YouTube thumbnails are publicly indexed images hosted on public web servers. You may download them for personal reference, analysis, fair use commentary, or design inspiration.',
+      },
+      {
+        question: 'Why is my thumbnail quality 640x480 instead of 1280x720?',
+        answer: 'Some videos (especially very old uploads or low-resolution clips) do not have a 1280x720 maxres image generated by YouTube. In those cases, our downloader automatically serves the highest resolution YouTube has on file (640x480 standard or 480x360 high quality).',
+      },
+      {
+        question: 'Does this tool download the video itself?',
+        answer: 'No. This tool strictly retrieves the static thumbnail image file and does not download or stream video files.',
+      },
+    ],
+    examples: [
+      {
+        title: 'Tech Review Video',
+        inputs: { videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+        outputSummary: 'Extracts 1280x720 HD thumbnail ready for instant download and inspection.',
       },
     ],
   },

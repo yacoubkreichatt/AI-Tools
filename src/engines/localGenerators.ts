@@ -675,6 +675,19 @@ export function runLocalGenerator(toolSlug: string, inputs: Record<string, any>)
       return generateResume(inputs);
     case 'cover-letter-generator':
       return generateCoverLetter(inputs);
+    case 'youtube-thumbnail-downloader': {
+      const url = inputs.videoUrl || 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+      return {
+        list: [
+          `YouTube Thumbnail Extracted for URL: ${url}`,
+          'Resolution: 1280x720 (Maxres HD)',
+        ],
+        metadata: {
+          engineUsed: 'local',
+          generatedAt: new Date().toISOString(),
+        },
+      };
+    }
     default:
       return {
         list: [`Sample output for ${toolSlug}`],

@@ -2,13 +2,14 @@ import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
 import { handleGenerateRequest } from './src/server/geminiHandler.js';
+import { handleGenerateImageRequest, handleImprovePromptRequest } from './src/server/imageHandler.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // API Endpoint for AI Generation with fallback
 app.post('/api/generate', async (req, res) => {
@@ -18,6 +19,34 @@ app.post('/api/generate', async (req, res) => {
     res.json(result);
   } catch (err: any) {
     res.json({ fallback: true, error: err?.message || 'Generation error' });
+  }
+});
+
+// API Endpoint for AI Image Generation with fallback
+app.post('/api/generate-image', async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const result = await handleGenerateImageRequest(payload);
+    res.json(result);
+  } catch (err: any) {
+    res.json({
+      success: false,
+      fallback: true,
+      error: 'GENERATION_ERROR',
+      message: 'AI image generation is currently unavailable. You can still create and copy an optimized image prompt.',
+      optimizedPrompt: '',
+    });
+  }
+});
+
+// API Endpoint for Prompt Optimization
+app.post('/api/improve-prompt', async (req, res) => {
+  try {
+    const { prompt, style } = req.body || {};
+    const result = await handleImprovePromptRequest(prompt, style);
+    res.json(result);
+  } catch (err: any) {
+    res.json({ improvedPrompt: req.body?.prompt || '' });
   }
 });
 

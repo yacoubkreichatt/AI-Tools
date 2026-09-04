@@ -25,7 +25,7 @@ export const SeoHead: React.FC<SeoHeadProps> = ({
   const siteOrigin = (import.meta.env.VITE_SITE_URL as string) ||
     (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1')
       ? window.location.origin
-      : 'https://YOUR-DOMAIN.com');
+      : 'https://technologyhze.online');
   const fullUrl = `${siteOrigin}${canonicalPath}`;
 
   useEffect(() => {

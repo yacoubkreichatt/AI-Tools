@@ -8,6 +8,8 @@ import { copyToClipboard } from '../utils/clipboard';
 import { SeoHead } from './SeoHead';
 import { ToolIcon } from './ToolIcon';
 import { ShareModal } from './ShareModal';
+import { YouTubeThumbnailTool } from './YouTubeThumbnailTool';
+import { AiImageGeneratorTool } from './AiImageGeneratorTool';
 import {
   Sparkles,
   Copy,
@@ -30,6 +32,13 @@ interface ToolWorkspaceProps {
 }
 
 export const ToolWorkspace: React.FC<ToolWorkspaceProps> = ({ tool }) => {
+  if (tool.slug === 'youtube-thumbnail-downloader') {
+    return <YouTubeThumbnailTool tool={tool} />;
+  }
+  if (tool.slug === 'image-prompt-generator') {
+    return <AiImageGeneratorTool tool={tool} />;
+  }
+
   const { navigate, isFavorite, toggleFavorite, addRecent, t } = useApp();
 
   // Inputs state initialized with default values from tool definition
@@ -213,7 +222,7 @@ export const ToolWorkspace: React.FC<ToolWorkspaceProps> = ({ tool }) => {
           (import.meta.env.VITE_SITE_URL as string) ||
           (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1')
             ? window.location.origin
-            : 'https://YOUR-DOMAIN.com')
+            : 'https://technologyhze.online')
         }/tools/${tool.slug}`}
       />
 

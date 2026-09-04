@@ -43,4 +43,11 @@ export const CATEGORIES: Category[] = [
     icon: 'Search',
     subcategories: ['Meta Titles', 'Meta Descriptions', 'Keywords', 'Content Ideas'],
   },
+  {
+    id: 'youtube',
+    name: 'YouTube',
+    description: 'Optimize and accelerate your YouTube channel with viral title generators and high-resolution thumbnail extractors.',
+    icon: 'Youtube',
+    subcategories: ['Thumbnails', 'Titles', 'Shorts', 'Tags', 'SEO'],
+  },
 ];
