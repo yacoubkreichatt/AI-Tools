@@ -1,0 +1,6 @@
+{
+  "name": "AI Tools Hub",
+  "description": "Free AI tools for content creators, marketers, businesses, and job seekers. Fast, mobile-first, and no account required.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
