@@ -62,8 +62,10 @@ export const AiImageGeneratorTool: React.FC<AiImageGeneratorToolProps> = ({ tool
   const [isGenerating, setIsGenerating] = useState(false);
   const [isImproving, setIsImproving] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generatedMimeType, setGeneratedMimeType] = useState<string>('image/png');
   const [activePrompt, setActivePrompt] = useState<string>('');
   const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
+  const [fallbackCode, setFallbackCode] = useState<string | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(null);
@@ -81,6 +83,7 @@ export const AiImageGeneratorTool: React.FC<AiImageGeneratorToolProps> = ({ tool
 
     setErrorMessage(null);
     setFallbackMessage(null);
+    setFallbackCode(null);
     setIsGenerating(true);
 
     const calculatedPrompt = generateOptimizedPromptText(prompt, style, aspectRatio, negativePrompt);
@@ -98,18 +101,18 @@ export const AiImageGeneratorTool: React.FC<AiImageGeneratorToolProps> = ({ tool
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Image generation server error');
-      }
-
       const data = await response.json();
 
       if (data.success && data.image) {
         setGeneratedImage(data.image);
+        setGeneratedMimeType(data.mimeType || 'image/png');
+        setFallbackMessage(null);
+        setFallbackCode(null);
         if (data.prompt) setActivePrompt(data.prompt);
       } else {
         // Honest fallback without fake images
         setGeneratedImage(null);
+        setFallbackCode(data.code || 'UNAVAILABLE');
         setFallbackMessage(
           data.message ||
             'AI image generation is currently unavailable. You can still create and copy an optimized image prompt.'
@@ -119,8 +122,9 @@ export const AiImageGeneratorTool: React.FC<AiImageGeneratorToolProps> = ({ tool
     } catch {
       // Network or offline fallback
       setGeneratedImage(null);
+      setFallbackCode('SERVER_ERROR');
       setFallbackMessage(
-        'AI image generation is currently unavailable. You can still create and copy an optimized image prompt.'
+        'Image generation failed due to a server error. You can still create and copy an optimized image prompt.'
       );
       setActivePrompt(calculatedPrompt);
     } finally {
@@ -188,11 +192,11 @@ export const AiImageGeneratorTool: React.FC<AiImageGeneratorToolProps> = ({ tool
     }
   };
 
-  const handleDownloadImage = () => {
+  const handleDownloadImage = (format: 'png' | 'jpg' = 'png') => {
     if (!generatedImage) return;
     const link = document.createElement('a');
     link.href = generatedImage;
-    link.download = `ai-image-${Date.now()}.jpg`;
+    link.download = `ai-image-${Date.now()}.${format}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -406,9 +410,28 @@ export const AiImageGeneratorTool: React.FC<AiImageGeneratorToolProps> = ({ tool
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-2">
               <div className="flex items-start gap-2.5">
                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-sm font-bold text-amber-900">Notice</h3>
-                  <p className="text-xs sm:text-sm text-amber-800 mt-0.5 leading-relaxed">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm font-bold text-amber-900">
+                      {fallbackCode === 'QUOTA_EXCEEDED'
+                        ? 'Image Model Quota Limit'
+                        : fallbackCode === 'MISSING_API_KEY'
+                        ? 'API Configuration Required'
+                        : fallbackCode === 'INVALID_API_KEY'
+                        ? 'Invalid API Credentials'
+                        : fallbackCode === 'SAFETY_BLOCKED'
+                        ? 'Content Safety Filter'
+                        : fallbackCode === 'MODEL_ERROR'
+                        ? 'Model Unavailable'
+                        : 'Image Generation Notice'}
+                    </h3>
+                    {fallbackCode && (
+                      <span className="text-[10px] font-mono font-bold bg-amber-200/60 text-amber-900 px-2 py-0.5 rounded-md">
+                        {fallbackCode}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-amber-800 leading-relaxed">
                     {fallbackMessage}
                   </p>
                 </div>
@@ -439,11 +462,20 @@ export const AiImageGeneratorTool: React.FC<AiImageGeneratorToolProps> = ({ tool
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={handleDownloadImage}
+                  onClick={() => handleDownloadImage('png')}
                   className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-2xs flex items-center gap-2 cursor-pointer transition-all"
                 >
                   <Download className="w-4 h-4" />
-                  <span>Download Image (JPG)</span>
+                  <span>Download Image (PNG)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDownloadImage('jpg')}
+                  className="px-4 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-2xs flex items-center gap-2 cursor-pointer transition-all"
+                >
+                  <Download className="w-4 h-4 text-slate-400" />
+                  <span>Download JPG</span>
                 </button>
 
                 <button

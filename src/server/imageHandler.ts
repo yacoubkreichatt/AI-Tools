@@ -3,12 +3,13 @@ import { GoogleGenAI } from '@google/genai';
 let aiClient: GoogleGenAI | null = null;
 
 function getAiClient(): GoogleGenAI | null {
-  if (!process.env.GEMINI_API_KEY) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || typeof apiKey !== 'string' || !apiKey.trim()) {
     return null;
   }
   if (!aiClient) {
     aiClient = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
+      apiKey: apiKey.trim(),
       httpOptions: {
         headers: {
           'User-Agent': 'aistudio-build',
@@ -24,6 +25,7 @@ export interface GenerateImagePayload {
   negativePrompt?: string;
   style?: string;
   aspectRatio?: string;
+  imageSize?: '512px' | '1K' | '2K' | '4K';
 }
 
 export function generateOptimizedPromptText(
@@ -33,15 +35,24 @@ export function generateOptimizedPromptText(
   negativePrompt = ''
 ): string {
   const styleModifiers: Record<string, string> = {
-    Photorealistic: 'hyper-realistic photography, 8k resolution, shot on 85mm f/1.4 lens, natural soft lighting, hyper-detailed textures, realistic depth of field',
-    Cinematic: 'cinematic movie still, 35mm anamorphic lens, volumetric golden light, dramatic atmosphere, color graded, ultra-detailed',
-    '3D Render': 'octane 3D render, ray tracing, subsurface scattering, ambient occlusion, polished finish, unreal engine 5 aesthetic',
-    Anime: 'studio ghibli and modern anime aesthetic, vibrant color palette, crisp line art, beautiful atmospheric lighting, detailed background',
-    Illustration: 'editorial vector illustration, clean lines, minimalist composition, balanced color harmony, flat design with depth',
-    'Digital Art': 'digital concept art, trending on ArtStation, dynamic lighting, high fantasy detailing, rich brushstrokes',
-    'Product Photography': 'commercial studio product shot, softbox lighting, clean white gradient backdrop, reflections, commercial advertising grade',
-    Fantasy: 'epic dark fantasy landscape, mystical glowing elements, ethereal mist, ancient architecture, magical realism',
-    Minimalist: 'minimalist composition, abundant negative space, refined geometric harmony, subdued elegant palette',
+    Photorealistic:
+      'hyper-realistic photography, 8k resolution, shot on 85mm f/1.4 lens, natural soft lighting, hyper-detailed textures, realistic depth of field',
+    Cinematic:
+      'cinematic movie still, 35mm anamorphic lens, volumetric golden light, dramatic atmosphere, color graded, ultra-detailed',
+    '3D Render':
+      'octane 3D render, ray tracing, subsurface scattering, ambient occlusion, polished finish, unreal engine 5 aesthetic',
+    Anime:
+      'studio ghibli and modern anime aesthetic, vibrant color palette, crisp line art, beautiful atmospheric lighting, detailed background',
+    Illustration:
+      'editorial vector illustration, clean lines, minimalist composition, balanced color harmony, flat design with depth',
+    'Digital Art':
+      'digital concept art, trending on ArtStation, dynamic lighting, high fantasy detailing, rich brushstrokes',
+    'Product Photography':
+      'commercial studio product shot, softbox lighting, clean white gradient backdrop, reflections, commercial advertising grade',
+    Fantasy:
+      'epic dark fantasy landscape, mystical glowing elements, ethereal mist, ancient architecture, magical realism',
+    Minimalist:
+      'minimalist composition, abundant negative space, refined geometric harmony, subdued elegant palette',
     Custom: 'masterpiece quality, ultra-detailed composition',
   };
 
@@ -64,8 +75,9 @@ export async function handleGenerateImageRequest(payload: GenerateImagePayload) 
   if (!payload || typeof payload !== 'object') {
     return {
       success: false,
-      fallback: true,
+      code: 'INVALID_REQUEST',
       error: 'INVALID_REQUEST',
+      fallback: true,
       message: 'Invalid request payload format.',
       optimizedPrompt: '',
     };
@@ -75,8 +87,9 @@ export async function handleGenerateImageRequest(payload: GenerateImagePayload) 
   if (!rawPrompt) {
     return {
       success: false,
-      fallback: true,
+      code: 'PROMPT_REQUIRED',
       error: 'PROMPT_REQUIRED',
+      fallback: true,
       message: 'Please describe the image you want to create.',
       optimizedPrompt: '',
     };
@@ -86,14 +99,18 @@ export async function handleGenerateImageRequest(payload: GenerateImagePayload) 
   const negativePrompt = typeof payload.negativePrompt === 'string' ? payload.negativePrompt.trim().slice(0, 500) : '';
   const aspectRatio = typeof payload.aspectRatio === 'string' ? payload.aspectRatio : '1:1';
 
-  // Map ratio to API supported values: '1:1' | '3:4' | '4:3' | '9:16' | '16:9'
-  const allowedRatios: Record<string, '1:1' | '3:4' | '4:3' | '9:16' | '16:9'> = {
+  // Map ratio to API supported values: '1:1' | '3:4' | '4:3' | '9:16' | '16:9' | '1:4' | '1:8' | '4:1' | '8:1'
+  const allowedRatios: Record<string, '1:1' | '3:4' | '4:3' | '9:16' | '16:9' | '1:4' | '1:8' | '4:1' | '8:1'> = {
     '1:1': '1:1',
     '16:9': '16:9',
     '9:16': '9:16',
     '4:5': '3:4', // Map 4:5 closest supported ratio
     '3:4': '3:4',
     '4:3': '4:3',
+    '1:4': '1:4',
+    '1:8': '1:8',
+    '4:1': '4:1',
+    '8:1': '8:1',
   };
   const targetRatio = allowedRatios[aspectRatio] || '1:1';
 
@@ -104,62 +121,103 @@ export async function handleGenerateImageRequest(payload: GenerateImagePayload) 
   if (!ai) {
     return {
       success: false,
+      code: 'MISSING_API_KEY',
+      error: 'MISSING_API_KEY',
       fallback: true,
-      error: 'GEMINI_API_KEY_NOT_CONFIGURED',
-      message: 'AI image generation is currently unavailable. You can still create and copy an optimized image prompt.',
+      message:
+        'AI image generation is not configured on the server. Please set GEMINI_API_KEY in your server environment variables.',
       optimizedPrompt: fullPrompt,
     };
   }
 
-  // 3. Attempt image generation with Google GenAI SDK
+  // 3. Call Google Gemini image-generation model: gemini-3.1-flash-image
   try {
-    // Primary model: imagen-3.0-generate-002
-    const imageResponse = await ai.models.generateImages({
-      model: 'imagen-3.0-generate-002',
-      prompt: fullPrompt,
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-flash-image',
+      contents: {
+        parts: [
+          {
+            text: fullPrompt,
+          },
+        ],
+      },
       config: {
-        numberOfImages: 1,
-        aspectRatio: targetRatio,
-        outputMimeType: 'image/jpeg',
+        imageConfig: {
+          aspectRatio: targetRatio,
+          imageSize: '1K',
+        },
       },
     });
 
-    const generatedImage = imageResponse.generatedImages?.[0];
-    if (generatedImage?.image?.imageBytes) {
-      const base64 = generatedImage.image.imageBytes;
+    let base64Image: string | null = null;
+    let mimeType = 'image/png';
+
+    const candidates = response.candidates || [];
+    for (const candidate of candidates) {
+      const parts = candidate.content?.parts || [];
+      for (const part of parts) {
+        if (part.inlineData && part.inlineData.data) {
+          base64Image = part.inlineData.data;
+          mimeType = part.inlineData.mimeType || 'image/png';
+          break;
+        }
+      }
+      if (base64Image) break;
+    }
+
+    if (base64Image) {
       return {
         success: true,
-        image: `data:image/jpeg;base64,${base64}`,
-        mimeType: 'image/jpeg',
+        image: `data:${mimeType};base64,${base64Image}`,
+        mimeType,
         prompt: fullPrompt,
       };
     }
 
-    // If no bytes returned
+    // If no image part returned
     return {
       success: false,
-      fallback: true,
+      code: 'NO_IMAGE_DATA',
       error: 'NO_IMAGE_DATA',
-      message: 'AI image generation is currently unavailable. You can still create and copy an optimized image prompt.',
+      fallback: true,
+      message: 'The model completed the request but did not return image data. You can copy the optimized prompt below.',
       optimizedPrompt: fullPrompt,
     };
   } catch (err: any) {
-    // Safe error inspection without exposing secrets
-    console.error('Image generation error:', err?.message || 'Unknown error');
-
-    let userMessage = 'AI image generation is currently unavailable. You can still create and copy an optimized image prompt.';
+    // Diagnostic error analysis without exposing secrets
     const errMsg = (err?.message || '').toLowerCase();
+    const status = err?.status || err?.code;
 
-    if (errMsg.includes('quota') || errMsg.includes('rate limit') || errMsg.includes('429')) {
-      userMessage = 'API quota or rate limit exceeded. You can still create and copy an optimized image prompt.';
-    } else if (errMsg.includes('safety') || errMsg.includes('blocked')) {
+    let errorCode = 'SERVER_ERROR';
+    let userMessage = 'Image generation failed due to a server error. Please try again later.';
+
+    if (
+      status === 429 ||
+      errMsg.includes('quota') ||
+      errMsg.includes('resource_exhausted') ||
+      errMsg.includes('rate limit') ||
+      errMsg.includes('limit: 0')
+    ) {
+      errorCode = 'QUOTA_EXCEEDED';
+      userMessage =
+        'Image generation quota reached. The model gemini-3.1-flash-image requires a Gemini API key with billing enabled (free tier has 0 quota for image models). You can still copy the optimized prompt below.';
+    } else if (status === 401 || status === 403 || errMsg.includes('unauthenticated') || errMsg.includes('api key not valid')) {
+      errorCode = 'INVALID_API_KEY';
+      userMessage =
+        'The image generation service rejected the API credentials. Please check GEMINI_API_KEY on the server.';
+    } else if (status === 404 || errMsg.includes('not found') || errMsg.includes('is not supported')) {
+      errorCode = 'MODEL_ERROR';
+      userMessage = 'The image generation model (gemini-3.1-flash-image) is temporarily unavailable.';
+    } else if (errMsg.includes('safety') || errMsg.includes('blocked') || errMsg.includes('prohibited')) {
+      errorCode = 'SAFETY_BLOCKED';
       userMessage = 'The request was flagged by content safety filters. Please adjust your prompt description.';
     }
 
     return {
       success: false,
+      code: errorCode,
+      error: errorCode,
       fallback: true,
-      error: 'GENERATION_ERROR',
       message: userMessage,
       optimizedPrompt: fullPrompt,
     };

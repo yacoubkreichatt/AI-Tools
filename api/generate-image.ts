@@ -3,7 +3,12 @@ import { handleGenerateImageRequest } from '../src/server/imageHandler';
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({
+      success: false,
+      code: 'METHOD_NOT_ALLOWED',
+      error: 'Method Not Allowed',
+      message: 'Only POST requests are supported.',
+    });
   }
 
   try {
@@ -15,8 +20,9 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({
       success: false,
       fallback: true,
+      code: 'SERVER_ERROR',
       error: 'INTERNAL_SERVER_ERROR',
-      message: 'AI image generation is currently unavailable. You can still create and copy an optimized image prompt.',
+      message: 'Image generation failed due to a server error. Please try again later.',
     });
   }
 }

@@ -29,11 +29,12 @@ app.post('/api/generate-image', async (req, res) => {
     const result = await handleGenerateImageRequest(payload);
     res.json(result);
   } catch (err: any) {
-    res.json({
+    res.status(500).json({
       success: false,
       fallback: true,
-      error: 'GENERATION_ERROR',
-      message: 'AI image generation is currently unavailable. You can still create and copy an optimized image prompt.',
+      code: 'SERVER_ERROR',
+      error: 'SERVER_ERROR',
+      message: 'Image generation failed due to a server error. Please try again later.',
       optimizedPrompt: '',
     });
   }
